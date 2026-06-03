@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile</title>
+<link rel="stylesheet" href="profile.css">
+</head>
+<body>
+
+<div class="profile-page">
+  <div class="profile-header">
+    <button class="back-btn" onclick="history.back()">← Back</button>
+    <div class="profile-title">👤 Profile</div>
+    <div style="width:64px;"></div>
+  </div>
+
+  <!-- User Stats -->
+  <div class="stats-section">
+    <div class="stat-card">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value" id="streakDays">0</div>
+      <div class="stat-label">Day Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value" id="totalBadges">0</div>
+      <div class="stat-label">Badges</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-value" id="fastestTime">--:--</div>
+      <div class="stat-label">Best Time</div>
+    </div>
+  </div>
+
+  <!-- Streak Achievements -->
+  <div class="section-title">🔥 Streak Achievements</div>
+  <div class="badges-grid" id="streakBadges"></div>
+
+  <!-- Time Achievements -->
+  <div class="section-title">⚡ Speed Achievements</div>
+  <div class="badges-grid" id="timeBadges"></div>
+
+</div>
+
+<script src="profile.js"></script>
+</body>
+</html>

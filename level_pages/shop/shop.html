@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop</title>
+<link rel="stylesheet" href="shop.css">
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="shop-page">
+  <div class="shop-header">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="shop-title">🛍️ Shop</div>
+    <div style="width:64px;"></div>
+  </div>
+
+  <!-- currency display -->
+  <div class="shop-currency">
+    <div class="pill">🪙 <span id="shopCoins">0</span> Coins</div>
+    <div style="width:1px;height:20px;background:#dde6f0;"></div>
+    <div class="pill">💎 <span id="shopGems">0</span> Gems</div>
+  </div>
+
+  <!-- tabs -->
+  <div class="shop-tabs">
+    <button class="shop-tab active" onclick="switchTab('hints')">💡 Hints</button>
+    <button class="shop-tab" onclick="switchTab('skips')">⏭️ Skips</button>
+    <button class="shop-tab" onclick="switchTab('free')">🎁 Free Earnings</button>
+    <button class="shop-tab" onclick="switchTab('skins')">🎨 Skins</button>
+    <button class="shop-tab" onclick="switchTab('coins')">🪙 Coins</button>
+    <button class="shop-tab" onclick="switchTab('gems')">💎 Gems</button>
+  </div>
+
+  <!-- ══ HINTS TAB ══ -->
+  <div class="tab-content active" id="tab-hints">
+    <div class="shop-section-label">Hint Bundles · 2 💎 per hint</div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">1 Hint</div><div class="shop-row-desc">💎 2 Gems</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn free" onclick="buyHint(1,2,0)">💎 2 · Free</button>
+      </div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">5 Hints</div><div class="shop-row-desc">💎 10 Gems</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn free" onclick="buyHint(5,10,0)">💎 10 · Free</button>
+      </div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">30 Hints</div><div class="shop-row-desc">💎 60 Gems · $0.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn gem" onclick="buyHint(30,60,0.99)">💎 60</button>
+      </div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">50 Hints</div><div class="shop-row-desc">💎 100 Gems · $1.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn gem" onclick="buyHint(50,100,1.99)">💎 100</button>
+      </div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">200 Hints</div><div class="shop-row-desc">💎 400 Gems · $3.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn gem" onclick="buyHint(200,400,3.99)">💎 400</button>
+      </div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💡</div>
+        <div><div class="shop-row-name">500 Hints</div><div class="shop-row-desc">💎 1,000 Gems · $6.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn gem" onclick="buyHint(500,1000,6.99)">💎 1,000</button>
+      </div>
+    </div>
+
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">♾️</div>
+        <div><div class="shop-row-name">Unlimited Hints</div><div class="shop-row-desc">Forever · $14.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <span class="best-tag">BEST</span>
+        <button class="buy-btn cash" onclick="buyHint(-1,0,14.99)" style="margin-top:4px;">$14.99</button>
+      </div>
+    </div>
+
+    <div class="shop-section-label" style="margin-top:18px;">Hint Bag Subscription</div>
+    <div class="shop-row" style="border-color:#8e44ad;background:#f9f4ff;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎒</div>
+        <div><div class="shop-row-name">Hint Bag — 1 Month</div><div class="shop-row-desc">Unlimited access for 30 days · 💎 500 Gems</div></div>
+      </div>
+      <div class="shop-row-price">
+        <button class="buy-btn gem" onclick="buyHintBagMonth()">💎 500</button>
+      </div>
+    </div>
+
+    <div class="shop-section-label" style="margin-top:18px;">Golden Lock · 💎 5 Gems per Cell</div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🔒</div>
+        <div><div class="shop-row-name">Lock 1 Cell</div><div class="shop-row-desc">💎 5 Gems — protects a confirmed cell</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="buyGoldenLock(1)">💎 5</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🔒</div>
+        <div><div class="shop-row-name">Lock 5 Cells</div><div class="shop-row-desc">💎 25 Gems</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="buyGoldenLock(5)">💎 25</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🔒</div>
+        <div><div class="shop-row-name">Lock 10 Cells</div><div class="shop-row-desc">💎 50 Gems</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="buyGoldenLock(10)">💎 50</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🔒</div>
+        <div><div class="shop-row-name">Lock 20 Cells</div><div class="shop-row-desc">💎 100 Gems — max per level</div></div>
+      </div>
+      <div class="shop-row-price">
+        <span class="best-tag">MAX</span>
+        <button class="buy-btn gem" onclick="buyGoldenLock(20)" style="margin-top:4px;">💎 100</button>
+      </div>
+    </div>
+
+    <div class="shop-section-label" style="margin-top:18px;">Special Combos</div>
+
+    <div class="shop-row" style="border-color:#8e44ad;background:#f9f4ff;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎁</div>
+        <div><div class="shop-row-name">Combo 1 — Hints + Puzzles</div><div class="shop-row-desc">$17.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="showToast('Opening payment…')">$17.99</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#8e44ad;background:#f9f4ff;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎁</div>
+        <div><div class="shop-row-name">Combo 2 — Hints + Videos</div><div class="shop-row-desc">$15.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="showToast('Opening payment…')">$15.99</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#8e44ad;background:#f9f4ff;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎁</div>
+        <div><div class="shop-row-name">Combo 3 — Puzzles + Videos</div><div class="shop-row-desc">$13.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn gem" onclick="showToast('Opening payment…')">$13.99</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎁</div>
+        <div><div class="shop-row-name">Combo 4 — Hints + Puzzles + Videos</div><div class="shop-row-desc">Best Deal · $19.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <span class="best-tag">BEST DEAL</span>
+        <button class="buy-btn cash" onclick="showToast('Opening payment…')" style="margin-top:4px;">$19.99</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SKIPS TAB ══ -->
+  <div class="tab-content" id="tab-skips">
+    <div class="shop-section-label">Skip Bundles · 25 🪙 per skip</div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">1 Skip</div><div class="shop-row-desc">🪙 25 Coins</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="buySkip(1,25,0)">🪙 25 · Free</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">5 Skips</div><div class="shop-row-desc">🪙 125 Coins · $0.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buySkip(5,125,0.99)">🪙 125</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">10 Skips</div><div class="shop-row-desc">🪙 250 Coins · $1.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buySkip(10,250,1.99)">🪙 250</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">50 Skips</div><div class="shop-row-desc">🪙 1,250 Coins · $4.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buySkip(50,1250,4.99)">🪙 1,250</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">100 Skips</div><div class="shop-row-desc">🪙 2,500 Coins · $7.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buySkip(100,2500,7.99)">🪙 2,500</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">⏭️</div>
+        <div><div class="shop-row-name">150 Skips</div><div class="shop-row-desc">🪙 3,750 Coins · $11.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buySkip(150,3750,11.99)">🪙 3,750</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">♾️</div>
+        <div><div class="shop-row-name">Unlimited Skips</div><div class="shop-row-desc">Forever · $12.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <span class="best-tag">BEST</span>
+        <button class="buy-btn cash" onclick="showToast('Opening payment…')" style="margin-top:4px;">$12.99</button>
+      </div>
+    </div>
+
+    <div class="shop-section-label" style="margin-top:18px;">Walkthrough Videos</div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">1 Video</div><div class="shop-row-desc">🪙 20 Coins</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="buyVideo(1,20,0)">🪙 20 · Free</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">5 Videos</div><div class="shop-row-desc">🪙 100 Coins</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="buyVideo(5,100,0)">🪙 100 · Free</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">10 Videos</div><div class="shop-row-desc">🪙 200 Coins · $0.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buyVideo(10,200,0.99)">🪙 200</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">20 Videos</div><div class="shop-row-desc">🪙 400 Coins · $1.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buyVideo(20,400,1.99)">🪙 400</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">50 Videos</div><div class="shop-row-desc">🪙 1,000 Coins · $4.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buyVideo(50,1000,4.99)">🪙 1,000</button></div>
+    </div>
+
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🎬</div>
+        <div><div class="shop-row-name">100 Videos</div><div class="shop-row-desc">🪙 2,000 Coins · $7.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="buyVideo(100,2000,7.99)">🪙 2,000</button></div>
+    </div>
+
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">♾️</div>
+        <div><div class="shop-row-name">Unlimited Videos</div><div class="shop-row-desc">Forever · $10.99</div></div>
+      </div>
+      <div class="shop-row-price">
+        <span class="best-tag">BEST</span>
+        <button class="buy-btn cash" onclick="showToast('Opening payment…')" style="margin-top:4px;">$10.99</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FREE EARNINGS TAB ══ -->
+  <div class="tab-content" id="tab-free">
+    <div class="shop-section-label">Free Earnings</div>
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">📅</div>
+        <div><div class="shop-row-name">Daily Challenge</div><div class="shop-row-desc">+20 Coins · 5 day streak bonus</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="showToast('Play the daily challenge!')">Earn</button></div>
+    </div>
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">📺</div>
+        <div><div class="shop-row-name">Watch Ad</div><div class="shop-row-desc">+10 Coins per video</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="watchAd()">Watch</button></div>
+    </div>
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">📘</div>
+        <div><div class="shop-row-name">Facebook Share</div><div class="shop-row-desc">+50 Coins per share</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn free" onclick="facebookShare()">Share</button></div>
+    </div>
+  </div>
+
+  <!-- ══ SKINS TAB ══ -->
+  <div class="tab-content" id="tab-skins">
+    <div class="shop-section-label">Game Skins · 100 Coins = 20 Gems</div>
+    <div class="skin-grid" id="skinGrid"></div>
+  </div>
+
+  <!-- ══ COINS TAB ══ -->
+  <div class="tab-content" id="tab-coins">
+    <div class="shop-section-label">Buy Coins</div>
+    <table class="tier-table">
+      <thead><tr><th>Coins</th><th>Price</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>🪙 100</td><td class="price-col">$0.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(100)">Buy</button></td></tr>
+        <tr><td>🪙 250</td><td class="price-col">$1.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(250)">Buy</button></td></tr>
+        <tr><td>🪙 500</td><td class="price-col">$2.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(500)">Buy</button></td></tr>
+        <tr><td>🪙 1,000</td><td class="price-col">$4.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(1000)">Buy</button></td></tr>
+        <tr><td>🪙 2,500</td><td class="price-col">$9.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(2500)">Buy</button></td></tr>
+        <tr><td>🪙 5,000</td><td class="price-col">$15.99</td><td><button class="buy-btn cash" onclick="buyCoinTier(5000)">Buy</button></td></tr>
+      </tbody>
+    </table>
+
+    <div class="shop-section-label" style="margin-top:18px;">Currency + Gem Bundles</div>
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💰</div>
+        <div><div class="shop-row-name">5,000 Coins + 250 Gems</div><div class="shop-row-desc">Special bundle · $11.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn cash" onclick="showToast('Opening payment…')">$11.99</button></div>
+    </div>
+    <div class="shop-row" style="border-color:#f39c12;background:#fffbe6;">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">💰</div>
+        <div><div class="shop-row-name">5,000 Coins + 1,000 Gems</div><div class="shop-row-desc">Special bundle · $15.99</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn cash" onclick="showToast('Opening payment…')">$15.99</button></div>
+    </div>
+  </div>
+
+  <!-- ══ GEMS TAB ══ -->
+  <div class="tab-content" id="tab-gems">
+    <div class="shop-section-label">Buy Gems</div>
+    <table class="tier-table">
+      <thead><tr><th>Gems</th><th>Price</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>💎 50</td><td class="price-col">$0.99</td><td><button class="buy-btn gem" onclick="buyGemTier(50)">Buy</button></td></tr>
+        <tr><td>💎 250</td><td class="price-col">$2.99</td><td><button class="buy-btn gem" onclick="buyGemTier(250)">Buy</button></td></tr>
+        <tr><td>💎 500</td><td class="price-col">$4.99</td><td><button class="buy-btn gem" onclick="buyGemTier(500)">Buy</button></td></tr>
+        <tr><td>💎 1,500</td><td class="price-col">$7.99</td><td><button class="buy-btn gem" onclick="buyGemTier(1500)">Buy</button></td></tr>
+        <tr><td>💎 3,500</td><td class="price-col">$11.99</td><td><button class="buy-btn gem" onclick="buyGemTier(3500)">Buy</button></td></tr>
+      </tbody>
+    </table>
+    <div class="shop-section-label" style="margin-top:18px;">Rate: 100 Coins = 20 Gems</div>
+    <div class="shop-row">
+      <div class="shop-row-left">
+        <div class="shop-row-icon">🔄</div>
+        <div><div class="shop-row-name">Convert 100 Coins → 20 Gems</div><div class="shop-row-desc">Use your earned coins</div></div>
+      </div>
+      <div class="shop-row-price"><button class="buy-btn coin" onclick="convertCoins()">🪙 100</button></div>
+    </div>
+  </div>
+
+</div><!-- end shop-page -->
+
+<script src="shop.js"></script>
+</body>
+</html>

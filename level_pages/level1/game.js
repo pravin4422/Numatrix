@@ -1,14 +1,3 @@
-// ── SKINS ─────────────────────────────────────────────────────────
-// Prices from PDF: Normal=Free, Land=50gems, Water=80gems, Fire=100gems, Sky=60gems, Galaxy=120gems
-const SKINS = [
-  { id:'normal', name:'Normal',  emoji:'🌿', cost:0,   gems:0   },
-  { id:'land',   name:'Land',    emoji:'🏔️', cost:50,  gems:50  },
-  { id:'water',  name:'Water',   emoji:'🌊', cost:80,  gems:80  },
-  { id:'fire',   name:'Fire',    emoji:'🔥', cost:100, gems:100 },
-  { id:'sky',    name:'Sky',     emoji:'☁️', cost:60,  gems:60  },
-  { id:'galaxy', name:'Galaxy',  emoji:'🌌', cost:120, gems:120 },
-];
-
 // ── LEVEL DATA ────────────────────────────────────────────────────
 const LEVELS = [{
   rows:4, cols:4,
@@ -35,19 +24,81 @@ let currentLevel=0, lives=3, hints=3, mode='erase';
 let cellStates=[], solution=[], levelData=null;
 let undoStack=[], undoLeft=5;
 let hintBag=0, coins=0, gems=0;
-let ownedSkins=['normal'], activeSkin='normal';
+let timerStart=0, timerInterval=null, timerElapsed=0;
+let hintsUsedCount=0, undosUsedCount=0, initialHints=3, initialUndos=5;
 
+// ── CURRENCY (localStorage) ───────────────────────────────────────
+function loadState(){
+  coins   = parseInt(localStorage.getItem('numetrix_coins')   || '0');
+  gems    = parseInt(localStorage.getItem('numetrix_gems')    || '0');
+  hintBag = parseInt(localStorage.getItem('numetrix_hintBag') || '0');
+  timerElapsed = parseInt(localStorage.getItem('numetrix_timer') || '0');
+}
+function saveState(){
+  localStorage.setItem('numetrix_coins',   coins);
+  localStorage.setItem('numetrix_gems',    gems);
+  localStorage.setItem('numetrix_hintBag', hintBag);
+  localStorage.setItem('numetrix_timer',   timerElapsed);
+}
+function updateCurrencyBar(){
+  document.getElementById('coinBar').textContent  = coins;
+  document.getElementById('gemBar').textContent   = gems;
+  document.getElementById('bagBar').textContent   = hintBag;
+  document.getElementById('bagCount').textContent = hintBag;
+  saveState();
+}
+
+// ── LEVEL INIT ────────────────────────────────────────────────────
 function initLevel(idx){
   currentLevel=idx; levelData=LEVELS[idx];
   solution=computeSolution(levelData);
   cellStates=Array.from({length:levelData.rows},()=>Array(levelData.cols).fill(0));
   lives=3; hints=3; undoStack=[]; undoLeft=5; mode='erase';
+  timerElapsed=0;
+  hintsUsedCount=0; undosUsedCount=0; initialHints=3; initialUndos=5;
+  localStorage.setItem('numetrix_timer', '0');
   document.getElementById('levelTitle').textContent=`Level ${idx+1}`;
   document.getElementById('hintCount').textContent=hints;
   document.getElementById('undoCount').textContent=undoLeft;
   document.getElementById('nextLevelWrap').style.display='none';
   document.getElementById('gameoverOverlay').classList.remove('show');
+  startTimer();
   updateHearts(); updateModeUI(); updateUndoBtn(); updateCurrencyBar(); renderGrid();
+}
+
+function startTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerStart=Date.now()-timerElapsed*1000;
+  document.getElementById('timer').textContent='00:00';
+  timerInterval=setInterval(()=>{
+    timerElapsed=Math.floor((Date.now()-timerStart)/1000);
+    const mins=Math.floor(timerElapsed/60).toString().padStart(2,'0');
+    const secs=(timerElapsed%60).toString().padStart(2,'0');
+    document.getElementById('timer').textContent=`${mins}:${secs}`;
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval=null;
+    timerElapsed=Math.floor((Date.now()-timerStart)/1000);
+  }
+}
+
+function pauseTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval=null;
+    timerElapsed=Math.floor((Date.now()-timerStart)/1000);
+    localStorage.setItem('numetrix_timer', timerElapsed);
+  }
+}
+
+function resumeTimer(){
+  if(!timerInterval && timerStart>0){
+    startTimer();
+  }
 }
 
 function renderGrid(){
@@ -87,8 +138,13 @@ function onCellClick(e){
   const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
   const st=cellStates[r][c];
   const snapshot=snapshotState();
-  if(mode==='erase'){ cellStates[r][c]=st===-1?0:st===0?-1:0; }
-  else { cellStates[r][c]=st===1?0:st===0?1:0; }
+  if(mode==='erase'){
+    if(st===-1) return; // Don't toggle back from erased
+    cellStates[r][c]=st===0?-1:0;
+  }
+  else {
+    cellStates[r][c]=st===1?0:st===0?1:0;
+  }
   if(cellStates[r][c]!==0&&cellStates[r][c]!==solution[r][c]){
     lives--; updateHearts(); cellStates[r][c]=0; renderGrid();
     document.querySelectorAll('.heart').forEach(h=>{h.classList.remove('shake');void h.offsetWidth;h.classList.add('shake');});
@@ -100,12 +156,48 @@ function onCellClick(e){
 }
 
 function useUndo(){
-  if(undoLeft<=0){showToast('No undos left!');return;}
+  if(undoLeft<=0){
+    // Show purchase modal if gems available
+    if(gems>=20){
+      document.getElementById('purchaseUndoModal').classList.add('show');
+    } else {
+      showToast('No undos left! Need 20 💎 gems to buy more');
+    }
+    return;
+  }
   if(!undoStack.length){showToast('Nothing to undo!');return;}
   cellStates=undoStack.pop(); undoLeft--;
+  undosUsedCount++;
   document.getElementById('undoCount').textContent=undoLeft;
   updateUndoBtn(); renderGrid();
-  showToast(`↩️ Undone! (${undoLeft} left)`);
+}
+
+function closePurchaseModal() {
+  document.getElementById('purchaseUndoModal').classList.remove('show');
+}
+
+function confirmPurchaseUndo() {
+  if(gems>=20){
+    gems-=20;
+    undoLeft=3;
+    updateCurrencyBar();
+    document.getElementById('undoCount').textContent=undoLeft;
+    updateUndoBtn();
+    closePurchaseModal();
+    showToast('✅ Purchased 3 undos for 20 gems!');
+    // Perform the undo action immediately
+    if(undoStack.length){
+      cellStates=undoStack.pop();
+      undoLeft--;
+      undosUsedCount++;
+      document.getElementById('undoCount').textContent=undoLeft;
+      updateUndoBtn();
+      renderGrid();
+    }
+  } else {
+    closePurchaseModal();
+    showToast('Not enough gems!');
+  }
 }
 function updateUndoBtn(){
   const btn=document.getElementById('undoBtn');
@@ -115,9 +207,111 @@ function updateUndoBtn(){
 function checkWin(){
   const {rows,cols}=levelData;
   for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(cellStates[r][c]===0)return;
+  stopTimer();
+  const mins=Math.floor(timerElapsed/60);
+  const secs=timerElapsed%60;
+  
+  // Update streak
+  updateStreak();
+  
+  // Update fastest time
+  const fastestTime = parseInt(localStorage.getItem('numetrix_fastestTime') || '0');
+  const isNewBest = fastestTime === 0 || timerElapsed < fastestTime;
+  if (isNewBest) {
+    localStorage.setItem('numetrix_fastestTime', timerElapsed);
+  }
+  
   coins+=20; updateCurrencyBar();
-  showToast('🎉 Level complete! +20 coins earned!');
-  setTimeout(()=>{ document.getElementById('nextLevelWrap').style.display='block'; },300);
+  showToast(`🎉 Complete in ${mins}:${secs.toString().padStart(2,'0')}! +20 coins`);
+  
+  // Show completion card after 1.5 seconds
+  setTimeout(() => showCompletionCard(isNewBest), 1500);
+}
+
+function showCompletionCard(isNewBest) {
+  const mins = Math.floor(timerElapsed / 60);
+  const secs = timerElapsed % 60;
+  const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+  
+  document.getElementById('completionTime').textContent = timeStr;
+  
+  // Best time
+  const fastestTime = parseInt(localStorage.getItem('numetrix_fastestTime') || '0');
+  const bestMins = Math.floor(fastestTime / 60);
+  const bestSecs = fastestTime % 60;
+  const bestTimeStr = `${bestMins}:${bestSecs.toString().padStart(2, '0')}`;
+  document.getElementById('completionBestTime').textContent = isNewBest ? timeStr + ' 🆕' : bestTimeStr;
+  
+  // Calculate score (base 1000, minus time and hints/undos used)
+  const score = Math.max(0, 1000 - timerElapsed - (hintsUsedCount * 50) - (undosUsedCount * 10) + (lives * 100));
+  document.getElementById('completionScore').textContent = score;
+  
+  // Update best score
+  const bestScore = parseInt(localStorage.getItem('numetrix_bestScore') || '0');
+  if (score > bestScore) {
+    localStorage.setItem('numetrix_bestScore', score);
+  }
+  
+  // Streak
+  const streakDays = parseInt(localStorage.getItem('numetrix_streakDays') || '0');
+  document.getElementById('completionStreak').textContent = streakDays;
+  
+  // Stats
+  document.getElementById('hintsUsed').textContent = hintsUsedCount;
+  document.getElementById('undosUsed').textContent = undosUsedCount;
+  document.getElementById('livesLeft').textContent = lives;
+  
+  document.getElementById('completionOverlay').classList.add('show');
+}
+
+function closeCompletionCard() {
+  document.getElementById('completionOverlay').classList.remove('show');
+  document.getElementById('nextLevelWrap').style.display = 'block';
+}
+
+function shareResults() {
+  const mins = Math.floor(timerElapsed / 60);
+  const secs = timerElapsed % 60;
+  const streakDays = parseInt(localStorage.getItem('numetrix_streakDays') || '0');
+  const score = Math.max(0, 1000 - timerElapsed - (hintsUsedCount * 50) - (undosUsedCount * 10) + (lives * 100));
+  
+  const shareText = `🎉 I completed Numetrix Level ${currentLevel + 1}!\n⏱️ Time: ${mins}:${secs.toString().padStart(2, '0')}\n⭐ Score: ${score}\n🔥 Streak: ${streakDays} days\n💡 Hints: ${hintsUsedCount}\n❤️ Lives: ${lives}\n\nCan you beat my score?`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Numetrix Game',
+      text: shareText
+    }).catch(() => {});
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(shareText).then(() => {
+      showToast('📤 Copied to clipboard!');
+    });
+  }
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  const lastPlayed = localStorage.getItem('numetrix_lastPlayed');
+  let streakDays = parseInt(localStorage.getItem('numetrix_streakDays') || '0');
+  
+  if (!lastPlayed) {
+    streakDays = 1;
+  } else if (lastPlayed !== today) {
+    const lastDate = new Date(lastPlayed);
+    const currentDate = new Date(today);
+    const diffTime = currentDate - lastDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      streakDays += 1;
+    } else if (diffDays > 1) {
+      streakDays = 1;
+    }
+  }
+  
+  localStorage.setItem('numetrix_streakDays', streakDays);
+  localStorage.setItem('numetrix_lastPlayed', today);
 }
 
 function updateHearts(){
@@ -132,7 +326,6 @@ function updateModeUI(){
 }
 
 function useHint(){
-  // Hint cost: 2 gems per hint (from PDF)
   const total=hints+hintBag;
   if(total<=0){
     if(gems>=2){
@@ -151,112 +344,22 @@ function useHint(){
   const [r,c]=undecided[Math.floor(Math.random()*undecided.length)];
   cellStates[r][c]=solution[r][c];
   undoStack.push(snap); updateUndoBtn();
-  if(hints>0){hints--;document.getElementById('hintCount').textContent=hints;}
-  else if(hintBag>0){hintBag--;updateCurrencyBar();showToast('💡 Used a bag hint!');}
+  hintsUsedCount++;
+  if(hints>0){
+    hints--;
+    document.getElementById('hintCount').textContent=hints;
+    if(hints===0 && hintBag>0){
+      showToast('💡 Now using hint bag!');
+    }
+  }
+  else if(hintBag>0){
+    hintBag--;
+    updateCurrencyBar();
+  }
   renderGrid(); checkWin();
 }
 
 function restartGame(){ initLevel(currentLevel); }
-
-// ── CURRENCY ──────────────────────────────────────────────────────
-function updateCurrencyBar(){
-  document.getElementById('coinBar').textContent=coins;
-  document.getElementById('gemBar').textContent=gems;
-  document.getElementById('bagBar').textContent=hintBag;
-  document.getElementById('bagCount').textContent=hintBag;
-  document.getElementById('shopCoins').textContent=coins;
-  document.getElementById('shopGems').textContent=gems;
-}
-
-// ── SHOP ──────────────────────────────────────────────────────────
-function openShop(tab='hints'){
-  switchTab(tab);
-  updateCurrencyBar();
-  buildSkinGrid();
-  document.getElementById('shopModal').classList.add('show');
-}
-function closeShop(){ document.getElementById('shopModal').classList.remove('show'); }
-
-function switchTab(name){
-  document.querySelectorAll('.shop-tab').forEach((t,i)=>{
-    const tabs=['hints','skips','skins','coins','gems'];
-    t.classList.toggle('active',tabs[i]===name);
-  });
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-}
-
-// Hint bundles — cost in gems (2 gems per hint per PDF)
-function buyHint(amount,gemCost,cash){
-  if(amount===-1){showToast('💡 Unlimited hints unlocked! (demo)');hintBag+=999;updateCurrencyBar();return;}
-  if(gemCost>0&&gems<gemCost){showToast(`Need ${gemCost} 💎 gems!`);return;}
-  gems-=gemCost; hintBag+=amount; updateCurrencyBar();
-  showToast(`✅ +${amount} hint${amount>1?'s':''} added to bag!`);
-}
-
-// Hint Bag subscription — 500 gems for 1 month
-function buyHintBagMonth(){
-  if(gems<500){showToast('Need 500 💎 gems for the monthly bag!');return;}
-  gems-=500; hintBag+=150; updateCurrencyBar();
-  showToast('✅ Hint Bag (1 month) unlocked! +150 hints added!');
-}
-
-// Golden Lock — 5 gems per locked cell (up to 20 per level per PDF)
-function buyGoldenLock(cells){
-  const gemCost=cells*5;
-  if(gems<gemCost){showToast(`Need ${gemCost} 💎 gems for ${cells} locked cell${cells>1?'s':''}!`);return;}
-  gems-=gemCost; updateCurrencyBar();
-  showToast(`✅ ${cells} cell${cells>1?'s':''} locked! (💎 ${gemCost} spent)`);
-}
-
-function buySkip(amount,coinCost,cash){
-  if(coins<coinCost){showToast(`Need ${coinCost} 🪙 coins!`);return;}
-  coins-=coinCost; updateCurrencyBar();
-  showToast(`✅ +${amount} skip${amount>1?'s':''} added!`);
-}
-function buyVideo(amount,coinCost,cash){
-  if(coins<coinCost){showToast(`Need ${coinCost} 🪙 coins!`);return;}
-  coins-=coinCost; updateCurrencyBar();
-  showToast(`✅ +${amount} video${amount>1?'s':''} added!`);
-}
-function buyCoinTier(amount){ coins+=amount; updateCurrencyBar(); showToast(`✅ +${amount} coins! (demo)`); }
-function buyGemTier(amount){ gems+=amount; updateCurrencyBar(); showToast(`✅ +${amount} gems! (demo)`); }
-
-// Coin to Gem conversion: 100 Coins = 20 Gems (per PDF)
-function convertCoins(){
-  if(coins<100){showToast('Need 100 🪙 coins to convert!');return;}
-  coins-=100; gems+=20; updateCurrencyBar();
-  showToast('✅ 100 Coins → 20 Gems converted!');
-}
-function watchAd(){ coins+=10; updateCurrencyBar(); showToast('+10 🪙 coins from ad!'); }
-function facebookShare(){ coins+=50; updateCurrencyBar(); showToast('+50 🪙 coins from share!'); }
-
-// ── SKINS ─────────────────────────────────────────────────────────
-function buildSkinGrid(){
-  const grid=document.getElementById('skinGrid'); grid.innerHTML='';
-  SKINS.forEach(sk=>{
-    const owned=ownedSkins.includes(sk.id);
-    const active=activeSkin===sk.id;
-    const card=document.createElement('div');
-    card.className='skin-card'+(owned?' owned-skin':'')+(active?' active-skin':'');
-    card.style.background=active?'#f4eeff':owned?'#efffef':'#f7fbff';
-    let badge='';
-    if(active) badge='<span class="skin-badge active-badge">ACTIVE</span>';
-    else if(owned) badge='<span class="skin-badge owned-badge">OWNED</span>';
-    else if(sk.cost===0) badge='<span class="skin-badge free-badge">FREE</span>';
-    card.innerHTML=`${badge}<div class="skin-emoji">${sk.emoji}</div><div class="skin-name">${sk.name}</div><div class="skin-cost">${sk.cost===0?'Free':'💎 '+sk.gems}</div>`;
-    card.onclick=()=>selectSkin(sk);
-    grid.appendChild(card);
-  });
-}
-function selectSkin(sk){
-  if(activeSkin===sk.id){showToast('Already using this skin!');return;}
-  if(ownedSkins.includes(sk.id)){ activeSkin=sk.id; buildSkinGrid(); showToast(`✅ ${sk.name} skin activated!`); return; }
-  if(gems<sk.gems){showToast(`Need ${sk.gems} 💎 gems for ${sk.name} skin!`);return;}
-  gems-=sk.gems; ownedSkins.push(sk.id); activeSkin=sk.id;
-  updateCurrencyBar(); buildSkinGrid();
-  showToast(`✅ ${sk.name} skin unlocked!`);
-}
 
 // ── TOAST ─────────────────────────────────────────────────────────
 let toastTimer=null;
@@ -268,6 +371,17 @@ function showToast(msg){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
-  document.getElementById('shopModal').addEventListener('click',function(e){ if(e.target===this)closeShop(); });
+  loadState();
   initLevel(0);
+});
+
+// Reload state when returning from shop
+window.addEventListener('focus', function(){
+  loadState();
+  updateCurrencyBar();
+  resumeTimer();
+});
+
+window.addEventListener('blur', function(){
+  pauseTimer();
 });
